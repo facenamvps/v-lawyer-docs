@@ -24,9 +24,11 @@ SOURCE_CHANNEL = "onchain_meme"  # Source channel to listen to
 # SOURCE_CHANNEL = "onchaintestmeme"  # Source channel to listen to
 footer_path = f"C:/Users/Administrator/Downloads/changetext/footer.txt"
 bio_path = f"C:/Users/Administrator/Downloads/changetext/bio.txt"
+bio_path = f"C:/Users/Administrator/Downloads/changetext/bio.txt"
 header_path = f"C:/Users/Administrator/Downloads/changetext/header.txt"
 found_path = f"C:/Users/Administrator/Downloads/changetext/found.txt"
 now_path = f"C:/Users/Administrator/Downloads/changetext/now.txt"
+group_path = f"C:/Users/Administrator/Downloads/changetext/group.txt"
 
 DESTINATION_CHANNEL_ID = "@onchain_meme"  # Destination channel to repost to
 client = TelegramClient("session_name", API_ID, API_HASH)
@@ -281,32 +283,44 @@ def post_to_twitter(message, image_path, i):
     driver = drivers[i]
     driver.execute_script("window.focus();")
     profile_id = profiles[i]['profile_id']
-    try:
-        driver.get("https://x.com/home")
-        time.sleep(20)
-        current_url = driver.current_url
-        print(f"Driver {i} navigated to: {current_url}")
-        if "x.com/home" not in current_url:
-            raise Exception(f"Failed to navigate to https://x.com/home. Current URL: {current_url}")
+    for _ in range(2):
+        group = get_random_line(group_path)
+        try:
+            driver.get(group)
+            time.sleep(10)
 
-        if image_path:
-            absolute_image_path = os.path.abspath(image_path)
-            upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
-            upload_image.send_keys(absolute_image_path)
+            try:
+                tweet_button = driver.find_element(By.CSS_SELECTOR, '[data-testid="SideNav_NewTweet_Button"]')
+                print(f"find tweet_button is ok")
+            except (StaleElementReferenceException, NoSuchElementException):
+                print(f"can not find tweet_button")
+                continue
 
-        time.sleep(2)
+            if tweet_button:
+                driver.execute_script("arguments[0].click();", tweet_button)
+                print(f"click tweet_button is ok")
 
-        tweet_box = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetTextarea_0"]')
-        tweet_box.send_keys(format_message(remove_unsupported_characters(message)))
-        time.sleep(5)
+            time.sleep(5)
 
-        tweet_button = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButtonInline"]')
-        tweet_button.click()
-        print(f"Tweet posted by driver {i}")
+            if image_path:
+                absolute_image_path = os.path.abspath(image_path)
+                # upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
+                upload_image = driver.find_element(By.XPATH, '//input[@type="file" and @data-testid="fileInput"]')
+                upload_image.send_keys(absolute_image_path)
 
-    except Exception as e:
-        print(f"Error with driver {i} (profile {profile_id}): {e}")
-    time.sleep(10)  # Delay between posts
+            time.sleep(5)
+
+            tweet_box = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetTextarea_0"]')
+            tweet_box.send_keys(format_message(remove_unsupported_characters(message)))
+            time.sleep(5)
+
+            tweet_button = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButton"]')
+            tweet_button.click()
+            print(f"Tweet posted by driver {i}")
+
+        except Exception as e:
+            print(f"Error with driver {i} (profile {profile_id}): {e}")
+        time.sleep(10)  # Delay between posts
 
 
 @client.on(events.NewMessage(chats=SOURCE_CHANNEL))
@@ -323,7 +337,7 @@ async def handler(event):
 
         for i in range(len(drivers)):
             try:
-                comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
+                # comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
                 post_to_twitter(message_text, image_path, i)
             except Exception as e:
                 profile_id = profiles[i]['profile_id']
