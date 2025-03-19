@@ -52,9 +52,11 @@ profiles = [
 chrome_driver_path = f"C:/Users/Administrator/Downloads/chromedriver-win64/chromedriver.exe"
 
 BASE_PORT = 3500
+MAX_RETRIES = 3
 
 drivers = []
 gl_instances = []
+valid_profiles = {}
 # Create a Telegram client
 for i, profile in enumerate(profiles):
     port = BASE_PORT + i
@@ -63,32 +65,41 @@ for i, profile in enumerate(profiles):
         'profile_id': profile['profile_id'],
         'port': port
     })
-    # gl_instances.append(gl_instance)
-    #
-    # # Start the profile and get its debugger address.
-    # debugger_address = gl_instance.start()
-    # time.sleep(5)
-    #
-    # chrome_options = Options()
-    # chrome_options.add_experimental_option("debuggerAddress", debugger_address)
-    # service = Service(executable_path=chrome_driver_path)
-    # driver_instance = webdriver.Chrome(service=service, options=chrome_options)
-    # drivers.append(driver_instance)
-    #
-    # print(f"Initialized driver for profile {profile['profile_id']} with debugger address {debugger_address}")
 
-    debugger_address = gl.start()
-    time.sleep(5)  # Increased delay to ensure profile fully starts
+    debugger_address = None
+    retries = 0
+    while retries < MAX_RETRIES:
+        try:
+            print(f"Starting profile {profile['profile_id']} (attempt {retries + 1})...")
 
-    chrome_options = Options()
-    chrome_options.add_experimental_option("debuggerAddress", debugger_address)
-    service = Service(executable_path=chrome_driver_path)
-    try:
-        driver = webdriver.Chrome(service=service, options=chrome_options)
-        drivers.append(driver)
-        gl_instances.append(gl)
-    except Exception as e:
-        print(f"Failed to initialize driver {i} for profile {profile['profile_id']}: {e}")
+            debugger_address = gl.start()
+            time.sleep(5)  # Ensure the profile fully starts
+
+            chrome_options = Options()
+            chrome_options.add_experimental_option("debuggerAddress", debugger_address)
+            service = Service(executable_path=chrome_driver_path)
+
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            drivers.append(driver)
+            gl_instances.append(gl)
+            valid_profiles[i] = profile['profile_id']
+
+            print(f"✅ Successfully started driver for profile {profile['profile_id']}")
+            break  # Exit retry loop if successful
+        except Exception as e:
+            print(f"❌ Failed to start driver for profile {profile['profile_id']}: {e}")
+            retries += 1
+            time.sleep(3)  # Wait before retrying
+
+    if not debugger_address:
+        print(f"⚠️ Skipping profile {profile['profile_id']} due to repeated failures.")
+
+    print(f"\n✅ Total drivers started: {len(valid_profiles)}/{len(profiles)}")
+
+    # Stop script if no drivers started
+    if not drivers:
+        print("❌ No drivers started successfully. Exiting...")
+        exit()
 
 ####################### ------------------- TWITTER ------------------- ###########################
 
@@ -113,12 +124,12 @@ def format_message_comment(message):
 def format_message(message):
     header = get_random_line(header_path)
     footer = get_random_line(footer_path)
-    bio = get_random_line(bio_path)
+    quick_buy = f"Quick Buy: https://t.me/onchain_meme"
     found = get_random_line(found_path)
     now = get_random_line(now_path)
     updated_message = message.replace("Market found:", found).replace("Market Now:", now)
 
-    return f"{header}\n{updated_message}\n{bio}"
+    return f"{header}\n {updated_message}\n{quick_buy}"
 
 def remove_last_line(text):
     lines = text.split('\n')  # Split the message into lines
@@ -283,7 +294,8 @@ def post_to_twitter(message, image_path, i):
     driver = drivers[i]
     driver.execute_script("window.focus();")
     profile_id = profiles[i]['profile_id']
-    for _ in range(2):
+    print(f"got line 297")
+    for _ in range(1):
         group = get_random_line(group_path)
         try:
             driver.get(group)
@@ -291,21 +303,21 @@ def post_to_twitter(message, image_path, i):
 
             try:
                 tweet_button = driver.find_element(By.CSS_SELECTOR, '[data-testid="SideNav_NewTweet_Button"]')
-                print(f"find tweet_button is ok")
+                # print(f"find tweet_button is ok")
             except (StaleElementReferenceException, NoSuchElementException):
-                print(f"can not find tweet_button")
+                # print(f"can not find tweet_button")
                 continue
 
             if tweet_button:
                 driver.execute_script("arguments[0].click();", tweet_button)
-                print(f"click tweet_button is ok")
+                # print(f"click tweet_button is ok")
 
             time.sleep(5)
 
             if image_path:
                 absolute_image_path = os.path.abspath(image_path)
                 # upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
-                upload_image = driver.find_element(By.XPATH, '//input[@type="file" and @data-testid="fileInput"]')
+                upload_image = driver.find_element(By.CSS_SELECTOR, 'input[data-testid="fileInput"]')
                 upload_image.send_keys(absolute_image_path)
 
             time.sleep(5)
@@ -314,8 +326,9 @@ def post_to_twitter(message, image_path, i):
             tweet_box.send_keys(format_message(remove_unsupported_characters(message)))
             time.sleep(5)
 
-            tweet_button = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButton"]')
-            tweet_button.click()
+            tweet_button_post = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButton"]')
+            if tweet_button_post:
+                driver.execute_script("arguments[0].click();", tweet_button_post)
             print(f"Tweet posted by driver {i}")
 
         except Exception as e:
@@ -331,16 +344,16 @@ async def handler(event):
     full_message = event.message
 
     if message_reply:
+        print(f"GOt message reply")
         root_message = await client.get_messages(SOURCE_CHANNEL, ids=full_message.reply_to_msg_id)
         if root_message.media and isinstance(root_message.media, MessageMediaPhoto):
             image_path = await root_message.download_media()
 
-        for i in range(len(drivers)):
+        for i, profile_id in valid_profiles.items():
             try:
-                # comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
+                comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
                 post_to_twitter(message_text, image_path, i)
             except Exception as e:
-                profile_id = profiles[i]['profile_id']
                 print(f"Error processing profile {profile_id}: {e}")
 
         try:
