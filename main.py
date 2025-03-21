@@ -317,7 +317,9 @@ def post_to_twitter(message, image_path, i):
             if image_path:
                 absolute_image_path = os.path.abspath(image_path)
                 # upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
-                upload_image = driver.find_element(By.CSS_SELECTOR, 'input[data-testid="fileInput"]')
+                upload_image = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-testid="fileInput"]'))
+                )
                 upload_image.send_keys(absolute_image_path)
 
             time.sleep(5)
@@ -338,21 +340,19 @@ def post_to_twitter(message, image_path, i):
 
 @client.on(events.NewMessage(chats=SOURCE_CHANNEL))
 async def handler(event):
-    image_path = None
-    message_text = event.message.message
-    message_reply = event.message.reply_to_msg_id
+    global image_path
     full_message = event.message
-
+    message_reply = event.message.reply_to_msg_id
     if message_reply:
-        print(f"GOt message reply")
+        message_text = full_message.message
         root_message = await client.get_messages(SOURCE_CHANNEL, ids=full_message.reply_to_msg_id)
         if root_message.media and isinstance(root_message.media, MessageMediaPhoto):
             image_path = await root_message.download_media()
 
         for i, profile_id in valid_profiles.items():
             try:
-                comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
                 post_to_twitter(message_text, image_path, i)
+                comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
             except Exception as e:
                 print(f"Error processing profile {profile_id}: {e}")
 
