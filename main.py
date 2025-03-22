@@ -13,6 +13,7 @@ from telethon import TelegramClient, events
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from telethon.tl.types import MessageMediaPhoto
+import asyncio
 
 ############## ---------------Telegram API credentials
 API_ID = "20231368"
@@ -50,6 +51,8 @@ profiles = [
 ]
 
 chrome_driver_path = f"C:/Users/Administrator/Downloads/chromedriver-win64/chromedriver.exe"
+
+message_queue = asyncio.Queue()
 
 BASE_PORT = 3500
 MAX_RETRIES = 3
@@ -338,37 +341,84 @@ def post_to_twitter(message, image_path, i):
         time.sleep(10)  # Delay between posts
 
 
+# @client.on(events.NewMessage(chats=SOURCE_CHANNEL))
+# async def handler(event):
+#     global image_path
+#     full_message = event.message
+#     message_reply = event.message.reply_to_msg_id
+#     if message_reply:
+#         message_text = full_message.message
+#         root_message = await client.get_messages(SOURCE_CHANNEL, ids=full_message.reply_to_msg_id)
+#         if root_message.media and isinstance(root_message.media, MessageMediaPhoto):
+#             image_path = await root_message.download_media()
+#
+#         for i, profile_id in valid_profiles.items():
+#             try:
+#                 post_to_twitter(message_text, image_path, i)
+#                 comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
+#             except Exception as e:
+#                 print(f"Error processing profile {profile_id}: {e}")
+#
+#         try:
+#             os.remove(image_path)
+#         except Exception as e:
+#             print(f"Error removing file {image_path}: {e}")
+
 @client.on(events.NewMessage(chats=SOURCE_CHANNEL))
 async def handler(event):
-    global image_path
-    full_message = event.message
     message_reply = event.message.reply_to_msg_id
     if message_reply:
-        message_text = full_message.message
-        root_message = await client.get_messages(SOURCE_CHANNEL, ids=full_message.reply_to_msg_id)
-        if root_message.media and isinstance(root_message.media, MessageMediaPhoto):
-            image_path = await root_message.download_media()
+        await message_queue.put(event)
 
-        for i, profile_id in valid_profiles.items():
-            try:
-                post_to_twitter(message_text, image_path, i)
-                comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
-            except Exception as e:
-                print(f"Error processing profile {profile_id}: {e}")
 
+async def process_queue():
+    while True:
+        event = await message_queue.get()  # Wait for a new event (message) to be added to the queue
         try:
-            os.remove(image_path)
-        except Exception as e:
-            print(f"Error removing file {image_path}: {e}")
+            full_message = event.message
+            message_reply = event.message.reply_to_msg_id
 
-try:
-    client.start()
+            message_text = full_message.message
+            root_message = await client.get_messages(SOURCE_CHANNEL, ids=full_message.reply_to_msg_id)
+            if root_message.media and isinstance(root_message.media, MessageMediaPhoto):
+                image_path = await root_message.download_media()
+
+            for i, profile_id in valid_profiles.items():
+                try:
+                    post_to_twitter(message_text, image_path, i)
+                    comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
+                except Exception as e:
+                    print(f"Error processing profile {profile_id}: {e}")
+
+            try:
+                os.remove(image_path)
+            except Exception as e:
+                print(f"Error removing file {image_path}: {e}")
+        except Exception as e:
+            print(f"Error processing message: {e}")
+        # Ensure we keep processing while the loop is active
+        await asyncio.sleep(0)
+
+
+async def main():
+    # Start the queue processing task
+    asyncio.create_task(process_queue())
+
+    # Start the Telegram client and listen for events
+    await client.start()  # This replaces client.run_until_disconnected() directly
     print("Listening for messages...")
-    client.run_until_disconnected()
-finally:
-    # Cleanup: Stop all GoLogin instances and close drivers
-    for driver in drivers:
-        driver.quit()
-    for gl_instance in gl_instances:
-        gl_instance.stop()
-    print("Cleaned up resources.")
+    await client.run_until_disconnected()
+
+asyncio.run(main())
+
+# try:
+#     client.start()
+#     print("Listening for messages...")
+#     client.run_until_disconnected()
+# finally:
+#     # Cleanup: Stop all GoLogin instances and close drivers
+#     for driver in drivers:
+#         driver.quit()
+#     for gl_instance in gl_instances:
+#         gl_instance.stop()
+#     print("Cleaned up resources.")
