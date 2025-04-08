@@ -1,6 +1,7 @@
 import asyncio
 import os
 import random
+import re
 import time
 
 import unicodedata
@@ -22,14 +23,15 @@ BOT_TOKEN = "8092099688:AAEgP5w17zotUFW3ScdznvJEpHviG0j0XOM"
 
 # Channels
 # SOURCE_CHANNEL = "onchain_meme"  # Source channel to listen to
-SOURCE_CHANNEL = -1002296264762  # Source channel to listen to
-# SOURCE_CHANNEL = "onchaintestmeme"  # Source channel to listen to
+# SOURCE_CHANNEL = -1002572353866  # Source channel to listen to
+SOURCE_CHANNEL = "postintweet"  # Source channel to listen to
 footer_path = f"C:/Users/Administrator/Downloads/changetext/footer.txt"
 bio_path = f"C:/Users/Administrator/Downloads/changetext/bio.txt"
 header_path = f"C:/Users/Administrator/Downloads/changetext/header.txt"
 found_path = f"C:/Users/Administrator/Downloads/changetext/found.txt"
 now_path = f"C:/Users/Administrator/Downloads/changetext/now.txt"
 group_path = f"C:/Users/Administrator/Downloads/changetext/group.txt"
+comment_path = f"C:/Users/Administrator/Downloads/changetext/comment.txt"
 
 DESTINATION_CHANNEL_ID = "@onchain_meme"  # Destination channel to repost to
 client = TelegramClient("session_name", API_ID, API_HASH)
@@ -42,7 +44,11 @@ profiles = [
     },
     {
         'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
-        'profile_id': '67c64b4dd858809e6118a287'  # Replace with your Profile 3 ID
+        'profile_id': '67c64b4dd858809e6118a287'  # Replace with your Profile 2 ID
+    },
+    {
+        'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
+        'profile_id': '67efa30d9d2da139461e2ef9'  # Replace with your Profile 3 ID
     }
 ]
 
@@ -133,8 +139,12 @@ def format_message(token_id, token_name):
     # updated_message = message.replace("Market found:", token_id).replace(" Market Now:", "")
     bio = get_random_line(bio_path)
     footer_tag = "#SOL #BNB #ETH #MEMECoin #ONCHAIN_MEME"
-    print(f"got line 136")
-    return f"{header} \n\n {token_name} \n\n {token_id} \n\n {quick_buy} \n\n {footer_tag}"
+    # format token_name
+    if len(token_name) > 6 or re.search(r'\d', token_name):
+        message_token_name = f"I'm done Pnl #{token_name}"
+    else:
+        message_token_name = f"I'm done Pnl ${token_name}"
+    return f"{header} \n\n {message_token_name} \n\n {token_id} \n\n {quick_buy} \n\n {footer_tag}"
 
 def remove_last_line(text):
     lines = text.split('\n')  # Split the message into lines
@@ -146,7 +156,29 @@ def remove_unsupported_characters(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text) if ord(c) <= 0xFFFF)
 
 
-async def comment_twitter(message_text, i):
+async def like_twitter(i):
+    # Use the first driver instance (adjust if necessary)
+    driver = drivers[i]
+    driver.execute_script("window.focus();")
+    for _ in range(2):
+        driver.get("https://x.com/home")
+        await asyncio.sleep(15)
+
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        await asyncio.sleep(5)
+
+        try:
+            like_button = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-testid="like"]'))
+            )
+
+            driver.execute_script("arguments[0].click();", like_button)
+            await asyncio.sleep(5)
+        except (StaleElementReferenceException, NoSuchElementException):
+            continue
+
+
+async def comment_twitter(i):
     # Use the first driver instance (adjust if necessary)
     driver = drivers[i]
     driver.execute_script("window.focus();")
@@ -161,21 +193,34 @@ async def comment_twitter(message_text, i):
         first_post = cell_divs[2]
         # print(f"find first_post is ok")
 
+        driver.execute_script("arguments[0].click();", first_post)
+
         try:
-            tweet_user = WebDriverWait(driver, 20).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="tweetText"]'))
+            like_button = WebDriverWait(first_post, 20).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-testid="like"]'))
             )
 
-            driver.execute_script("arguments[0].scrollIntoView(true);", tweet_user)
+            driver.execute_script("arguments[0].click();", like_button)
+            print(f"click like is ok")
+            await asyncio.sleep(5)
+        except (StaleElementReferenceException, NoSuchElementException):
+            continue
+
+        try:
+            tweet_user = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="reply"]'))
+            )
+
+            # driver.execute_script("arguments[0].scrollIntoView(true);", tweet_user)
             await asyncio.sleep(2)
         except (StaleElementReferenceException, NoSuchElementException):
             continue
 
         if tweet_user:
             driver.execute_script("arguments[0].click();", tweet_user)
-            # print(f"click tweet_user is ok")
+            print(f"click tweet_user is ok")
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
 
         # Find tweet textarea and enter temporary text
         try:
@@ -184,14 +229,14 @@ async def comment_twitter(message_text, i):
         except (StaleElementReferenceException, NoSuchElementException):
             continue
 
+        comment_text = get_random_line(comment_path)
         if tweet_text_area:
-            tweet_text_area.send_keys(message_text)
+            tweet_text_area.send_keys(comment_text)
 
         await asyncio.sleep(5)
 
         try:
-            tweet_button = driver.find_element(By.CSS_SELECTOR, 'button[data-testid="tweetButtonInline"]')
-            # print(f"find tweet_button is ok")
+            tweet_button = driver.find_element(By.CSS_SELECTOR, 'button[data-testid="tweetButton"]')
         except (StaleElementReferenceException, NoSuchElementException):
             continue
 
@@ -199,102 +244,14 @@ async def comment_twitter(message_text, i):
             # tweet_button.click()
             # print(f"click tweet_button is ok")
             driver.execute_script("arguments[0].click();", tweet_button)
+            print(f"find tweet_button is ok")
+
         # else:
         #     print("Tweet reply button not found or error updating tweet textarea.")
 
         await asyncio.sleep(5)  # Additional delay before closing the reply dialog
 
-
-
-    # Remove this feature
-    # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    #
-    # await asyncio.sleep(5)
-    #
-    # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    #
-    # await asyncio.sleep(5)
-    # # --- PART 2: Loop through cells and reply to tweets ---
-    # cell_divs_2 = driver.find_elements(By.XPATH, "//article[@data-testid='tweet']")
-    #
-    # size_cell_divs_2 = len(cell_divs_2)
-    # print(f"size of cell_divs_2 {size_cell_divs_2}")
-    #
-    # if not cell_divs_2:
-    #     print("No cell elements found.")
-    #     return
-    #
-    # first_href = cell_divs_2[0].find_element(By.CSS_SELECTOR, 'a[href]').get_attribute('href')
-    #
-    # count = 0
-    # count_comment = 0
-    #
-    # for cell in cell_divs_2:
-    #     if count_comment == 5:
-    #         break
-    #
-    #     count += 1
-    #     if count == 1:
-    #         continue  # Skip the first matching cell
-    #
-    #     # try:
-    #     #     a_element = cell.find_element(By.CSS_SELECTOR, 'a[href]')
-    #     #     a_href = a_element.get_attribute('href')
-    #     # except (StaleElementReferenceException, NoSuchElementException):
-    #     #     print(f"Skipping cell {count} due to stale element or missing link.")
-    #     #     continue
-    #     #
-    #     #     # If the cell's link matches the first_href, skip it.
-    #     # if a_href == first_href:
-    #     #     print(f"Cell {count} contains target value, skipping.")
-    #     #     continue
-    #
-    #     # Only process cells that contain the verified icon
-    #     # verified_icon = cell.find_element(By.CSS_SELECTOR, '[data-testid="icon-verified"]')
-    #     # if not verified_icon:
-    #     #     continue
-    #
-    #     try:
-    #         verified_icons = cell.find_element(By.CSS_SELECTOR, 'svg[data-testid="icon-verified"]')
-    #     except (NoSuchElementException, StaleElementReferenceException):
-    #         continue
-    #
-    #     if not verified_icons:
-    #         continue
-    #
-    #     try:
-    #         reply_button = cell.find_element(By.CSS_SELECTOR, 'button[data-testid="reply"]')
-    #     except (NoSuchElementException, StaleElementReferenceException):
-    #         continue
-    #
-    #
-    #     # Click the reply button
-    #     reply_button.click()
-    #     print(f"Clicked reply button for matching cell number {count}")
-    #
-    #     await asyncio.sleep(2)  # Delay of 2 seconds
-    #
-    #     # Find tweet textarea and enter temporary text
-    #     tweet_text_area = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetTextarea_0"]')
-    #     if tweet_text_area:
-    #         tweet_text_area.send_keys(message_text)
-    #         print("Entered text in tweet textarea.")
-    #     else:
-    #         print("Tweet textarea not found.")
-    #         continue
-    #
-    #     await asyncio.sleep(5)
-    #
-    #     tweet_button = driver.find_element(By.CSS_SELECTOR, 'button[data-testid="tweetButton"]')
-    #     if tweet_button:
-    #         tweet_button.click()  # Click and focus again
-    #     else:
-    #         print("Tweet reply button not found or error updating tweet textarea.")
-    #
-    #     await asyncio.sleep(5)  # Additional delay before closing the reply dialog
-    #     count_comment += 1
-
-async def post_to_twitter(message, image_path, i, token_id, token_name):
+async def post_to_twitter(message, image_path, i):
     # Sequential posting
     driver = drivers[i]
     driver.execute_script("window.focus();")
@@ -306,6 +263,7 @@ async def post_to_twitter(message, image_path, i, token_id, token_name):
             driver.get("https://x.com/home")
             await asyncio.sleep(10)
 
+            # This feature post in community
             # try:
             #     tweet_button = driver.find_element(By.CSS_SELECTOR, '[data-testid="SideNav_NewTweet_Button"]')
             #     # print(f"find tweet_button is ok")
@@ -330,8 +288,8 @@ async def post_to_twitter(message, image_path, i, token_id, token_name):
             await asyncio.sleep(5)
 
             tweet_box = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetTextarea_0"]')
-            print(f"got line 333")
-            tweet_box.send_keys(format_message(token_id, token_name))
+            # print(f"got line 333")
+            tweet_box.send_keys(message)
             await asyncio.sleep(5)
 
             # tweet_button_post = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButton"]')
@@ -350,38 +308,42 @@ async def post_to_twitter(message, image_path, i, token_id, token_name):
 @client.on(events.NewMessage(chats=SOURCE_CHANNEL))
 async def handler(event):
     new_message = event.message
+    new_message_text = new_message.message
     # message_reply = event.message.reply_to_msg_id
-    history = await client.get_messages(SOURCE_CHANNEL, limit=3)
+    # history = await client.get_messages(SOURCE_CHANNEL, limit=3)
 
-    if len(history) > 1:
-        previous_message = history[1]  # previous message is at index 1
-        previous_message_1 = history[2]  #
+    # if len(history) > 1:
+        # previous_message = history[1]  # previous message is at index 1
+        # previous_message_1 = history[2]
 
-        if "/pnl" in previous_message.text:
+        # if "/pnl" in previous_message.text:
             # your logic here
-            print("Found '/pnl' in previous message.")
-        try:
-            token_id = previous_message.message.replace("/pnl ", "")
-            token_name = previous_message_1.message
+            # print("Found '/pnl' in previous message.")
+    try:
 
-            if new_message.media and isinstance(new_message.media, MessageMediaPhoto):
-                 image_path = await new_message.download_media()
+        if new_message.media and isinstance(new_message.media, MessageMediaPhoto):
+            image_path = await new_message.download_media()
 
-            for i, profile_id in valid_profiles.items():
-                try:
-                    await post_to_twitter(previous_message, image_path, i, token_id, token_name)
-                    # await comment_twitter(format_message_comment(remove_unsupported_characters(message_text)), i)
-                except Exception as e:
-                    print(f"Error processing profile {profile_id}: {e}")
-
+        for i, profile_id in valid_profiles.items():
             try:
-                os.remove(image_path)
+
+                if new_message_text == "comment":
+                    await comment_twitter(i)
+                elif new_message_text == "like":
+                    await like_twitter(i)
+                else:
+                    await post_to_twitter(new_message_text, image_path, i)
             except Exception as e:
-                print(f"Error removing file {image_path}: {e}")
+                print(f"Error processing profile {profile_id}: {e}")
 
-
+        try:
+            os.remove(image_path)
         except Exception as e:
-            print(f"Error occurred: {e}")
+            print(f"Error removing file {image_path}: {e}")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+
 
 try:
     client.start()
