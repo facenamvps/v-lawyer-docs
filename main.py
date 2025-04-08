@@ -162,7 +162,7 @@ async def like_twitter(i):
     driver.execute_script("window.focus();")
     for _ in range(2):
         driver.get("https://x.com/home")
-        await asyncio.sleep(15)
+        await asyncio.sleep(10)
 
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         await asyncio.sleep(5)
