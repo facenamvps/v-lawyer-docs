@@ -15,6 +15,8 @@ from telethon import TelegramClient, events
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from telethon.tl.types import MessageMediaPhoto
+import pyperclip
+from selenium.webdriver.common.keys import Keys
 
 ############## ---------------Telegram API credentials
 API_ID = "20231368"
@@ -38,14 +40,14 @@ client = TelegramClient("session_name", API_ID, API_HASH)
 
 
 profiles = [
-    {
-        'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
-        'profile_id': '67c2db00cf918ba0d64151bc'  # Profile 1 ID
-    },
-    {
-        'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
-        'profile_id': '67c64b4dd858809e6118a287'  # Replace with your Profile 2 ID
-    },
+    # {
+    #     'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
+    #     'profile_id': '67c2db00cf918ba0d64151bc'  # Profile 1 ID
+    # },
+    # {
+    #     'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
+    #     'profile_id': '67c64b4dd858809e6118a287'  # Replace with your Profile 2 ID
+    # },
     {
         'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
         'profile_id': '67efa30d9d2da139461e2ef9'  # Replace with your Profile 3 ID
@@ -256,7 +258,7 @@ async def post_to_twitter(message, image_path, i):
     driver = drivers[i]
     driver.execute_script("window.focus();")
     profile_id = profiles[i]['profile_id']
-    # print(f"got line 297")
+    print(message)
     for _ in range(1):
         group = get_random_line(group_path)
         try:
@@ -277,19 +279,20 @@ async def post_to_twitter(message, image_path, i):
             #
             # await asyncio.sleep(5)
 
-            if image_path:
-                absolute_image_path = os.path.abspath(image_path)
-                # upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
-                upload_image = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-testid="fileInput"]'))
-                )
-                upload_image.send_keys(absolute_image_path)
-
-            await asyncio.sleep(5)
+            # if image_path:
+            #     absolute_image_path = os.path.abspath(image_path)
+            #     # upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
+            #     upload_image = WebDriverWait(driver, 10).until(
+            #         EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-testid="fileInput"]'))
+            #     )
+            #     upload_image.send_keys(absolute_image_path)
+            #
+            # await asyncio.sleep(5)
+            pyperclip.copy(message)
 
             tweet_box = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetTextarea_0"]')
             # print(f"got line 333")
-            tweet_box.send_keys(message)
+            tweet_box.send_keys(Keys.CONTROL, 'v')
             await asyncio.sleep(5)
 
             # tweet_button_post = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButton"]')
@@ -321,8 +324,8 @@ async def handler(event):
             # print("Found '/pnl' in previous message.")
     try:
 
-        if new_message.media and isinstance(new_message.media, MessageMediaPhoto):
-            image_path = await new_message.download_media()
+        # if new_message.media and isinstance(new_message.media, MessageMediaPhoto):
+        #     image_path = await new_message.download_media()
 
         for i, profile_id in valid_profiles.items():
             try:
@@ -332,14 +335,14 @@ async def handler(event):
                 elif new_message_text == "like":
                     await like_twitter(i)
                 else:
-                    await post_to_twitter(new_message_text, image_path, i)
+                    await post_to_twitter(new_message_text, None, i)
             except Exception as e:
                 print(f"Error processing profile {profile_id}: {e}")
 
-        try:
-            os.remove(image_path)
-        except Exception as e:
-            print(f"Error removing file {image_path}: {e}")
+        # try:
+        #     os.remove(image_path)
+        # except Exception as e:
+        #     print(f"Error removing file {image_path}: {e}")
     except Exception as e:
         print(f"Error occurred: {e}")
 
