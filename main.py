@@ -78,7 +78,7 @@ for i, profile in enumerate(profiles):
             print(f"Starting profile {profile['profile_id']} (attempt {retries + 1})...")
 
             debugger_address = gl.start()
-            asyncio.sleep(5)  # Ensure the profile fully starts
+            # asyncio.sleep(5)  # Ensure the profile fully starts
 
             chrome_options = Options()
             chrome_options.add_experimental_option("debuggerAddress", debugger_address)
@@ -110,8 +110,7 @@ for i, profile in enumerate(profiles):
 
 def extract_token_id(message_text):
     lines = message_text.splitlines()
-    token_id_line = lines[3].strip()
-    token_id = token_id_line.strip("└").strip()
+    token_id = lines[1].strip()
     return token_id
 
 def get_random_line(path):
@@ -179,6 +178,30 @@ async def like_twitter(i):
         except (StaleElementReferenceException, NoSuchElementException):
             continue
 
+
+async def snapshot_chart(driver, token_id):
+    # Open a new tab
+    driver.execute_script("window.open();")
+
+    # Switch to the new tab
+    driver.switch_to.window(driver.window_handles[-1])
+
+    # Navigate to the page
+    driver.get(f"https://axiom.trade/meme/{token_id}")
+    await asyncio.sleep(5)  # Wait for the page to load
+
+    element = driver.find_element(By.CSS_SELECTOR, ".flex.flex-1.flex-row.min-h-0.overflow-hidden.relative")
+
+    # Take a screenshot of the specific element
+    image_path = element.screenshot("chart_screenshot.png")
+
+    # Close the current tab
+    driver.close()
+
+    # Switch back to the original tab
+    driver.switch_to.window(driver.window_handles[0])
+
+    return image_path
 
 async def comment_twitter(i):
     # Use the first driver instance (adjust if necessary)
@@ -255,10 +278,11 @@ async def comment_twitter(i):
 
 async def post_to_twitter(message, image_path, i):
     # Sequential posting
+    token_id = extract_token_id(message)
     driver = drivers[i]
     driver.execute_script("window.focus();")
     profile_id = profiles[i]['profile_id']
-    print(message)
+    # print(message)
     for _ in range(1):
         group = get_random_line(group_path)
         try:
@@ -279,21 +303,31 @@ async def post_to_twitter(message, image_path, i):
             #
             # await asyncio.sleep(5)
 
-            # if image_path:
-            #     absolute_image_path = os.path.abspath(image_path)
-            #     # upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
-            #     upload_image = WebDriverWait(driver, 10).until(
-            #         EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-testid="fileInput"]'))
-            #     )
-            #     upload_image.send_keys(absolute_image_path)
-            #
-            # await asyncio.sleep(5)
-            pyperclip.copy(message)
+            if image_path:
+                absolute_image_path = os.path.abspath(image_path)
 
-            tweet_box = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetTextarea_0"]')
-            # print(f"got line 333")
-            tweet_box.send_keys(Keys.CONTROL, 'v')
-            await asyncio.sleep(5)
+                image_capture_path = await snapshot_chart(driver, token_id)  # This will give you the correct image path
+
+                # Get the absolute paths for the image
+                absolute_image_capture = os.path.abspath(image_capture_path)
+                # upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
+                upload_image = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-testid="fileInput"]'))
+                )
+
+                upload_image.send_keys(f"{absolute_image_capture}\n{absolute_image_path}")
+
+            await asyncio.sleep(2)
+
+            driver.execute_script("""
+                var editor = document.querySelector('div[role="textbox"][data-testid="tweetTextarea_0"]');
+                if (editor) {
+                    editor.focus();
+                    document.execCommand('insertHTML', false, arguments[0]);
+                }
+            """, message)
+
+            await asyncio.sleep(2)
 
             # tweet_button_post = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButton"]')
 
@@ -301,7 +335,6 @@ async def post_to_twitter(message, image_path, i):
             tweet_button_post = driver.find_element(By.CSS_SELECTOR, '[data-testid="tweetButtonInline"]')
             if tweet_button_post:
                 driver.execute_script("arguments[0].click();", tweet_button_post)
-            print(f"Tweet posted by driver {i}")
 
         except Exception as e:
             print(f"Error with driver {i} (profile {profile_id}): {e}")
@@ -323,9 +356,9 @@ async def handler(event):
             # your logic here
             # print("Found '/pnl' in previous message.")
     try:
-
-        # if new_message.media and isinstance(new_message.media, MessageMediaPhoto):
-        #     image_path = await new_message.download_media()
+        image_path = None
+        if new_message.media and isinstance(new_message.media, MessageMediaPhoto):
+            image_path = await new_message.download_media()
 
         for i, profile_id in valid_profiles.items():
             try:
@@ -335,14 +368,14 @@ async def handler(event):
                 elif new_message_text == "like":
                     await like_twitter(i)
                 else:
-                    await post_to_twitter(new_message_text, None, i)
+                    await post_to_twitter(new_message_text, image_path, i)
             except Exception as e:
                 print(f"Error processing profile {profile_id}: {e}")
 
-        # try:
-        #     os.remove(image_path)
-        # except Exception as e:
-        #     print(f"Error removing file {image_path}: {e}")
+        try:
+            os.remove(image_path)
+        except Exception as e:
+            print(f"Error removing file {image_path}: {e}")
     except Exception as e:
         print(f"Error occurred: {e}")
 
