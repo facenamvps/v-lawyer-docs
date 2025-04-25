@@ -17,6 +17,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from telethon.tl.types import MessageMediaPhoto
 import pyperclip
 from selenium.webdriver.common.keys import Keys
+import requests
 
 ############## ---------------Telegram API credentials
 API_ID = "20231368"
@@ -31,7 +32,7 @@ footer_path = f"C:/Users/Administrator/Downloads/changetext/footer.txt"
 bio_path = f"C:/Users/Administrator/Downloads/changetext/bio.txt"
 header_path = f"C:/Users/Administrator/Downloads/changetext/header.txt"
 found_path = f"C:/Users/Administrator/Downloads/changetext/found.txt"
-now_path = f"C:/Users/Administrator/Downloads/changetext/now.txt"
+advice_path = f"C:/Users/Administrator/Downloads/changetext/advice.txt"
 group_path = f"C:/Users/Administrator/Downloads/changetext/group.txt"
 comment_path = f"C:/Users/Administrator/Downloads/changetext/comment.txt"
 
@@ -50,9 +51,14 @@ profiles = [
     # },
     {
         'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
-        'profile_id': '67efa30d9d2da139461e2ef9'  # Replace with your Profile 3 ID
+        'profile_id': '6807a86b8c3d736930df3bea'  # Replace with your Profile 3 ID
     }
 ]
+
+cookies = {
+        "auth-refresh-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyZWZyZXNoVG9rZW5JZCI6IjQxNWJkOTI0LTAxYTctNDU5Ny1iZjBhLWFhNzVhMzJlMTAwOCIsImlhdCI6MTc0NTM5MDA4MH0.XZYgGlmNLOhXhcwwVE8LTgFzmpVcwy2esJO9mFMbeao",
+        "auth-access-token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoZW50aWNhdGVkVXNlcklkIjoiZTczNGVlMjEtMGYyNy00ODI4LWI2MmUtYjczZDlkZTZhNWVkIiwiaWF0IjoxNzQ1NTQwOTI0LCJleHAiOjE3NDU1NDE4ODR9.HmsRMsKkgMRgRekuBF1fTDXnq2WAyyeFabuUf-NvyKs"
+    }
 
 chrome_driver_path = f"C:/Users/Administrator/Downloads/chromedriver-win64/chromedriver.exe"
 
@@ -136,7 +142,6 @@ def format_message(token_id, token_name):
     footer = get_random_line(footer_path)
     quick_buy = f"Quick Buy: https://t.me/onchain_meme"
     found = get_random_line(found_path)
-    now = get_random_line(now_path)
     # updated_message = message.replace("Market found:", token_id).replace(" Market Now:", "")
     bio = get_random_line(bio_path)
     footer_tag = "#SOL #BNB #ETH #MEMECoin #ONCHAIN_MEME"
@@ -178,30 +183,47 @@ async def like_twitter(i):
         except (StaleElementReferenceException, NoSuchElementException):
             continue
 
+async def get_pair_token(token_id):
+    # URL for the request
+    url = f"https://api3.axiom.trade/search?searchQuery={token_id}&isOg=false&isPumpOnly=false"
+
+    # Headers to send with the request
+    headers = {
+        "Accept": "application/json, text/plain, */*",
+        "Content-Type": "application/json"
+    }
+
+    # Send the GET request
+    response = requests.get(url, headers=headers, cookies=cookies)
+
+    # Check if the response is successful
+    if response.status_code == 200:
+        # Parse the JSON response
+        data = response.json()
+
+        # Extract the 'pairAddress' from the first element (assuming the structure is consistent)
+        pair_address = data[0].get("pairAddress", None)
+
+        if pair_address:
+            return pair_address
+        else:
+            print("Pair address not found.")
+    else:
+        print(f"Request failed with status code {response.status_code}")
 
 async def snapshot_chart(driver, token_id):
-    # Open a new tab
-    driver.execute_script("window.open();")
+    # Get pair_token
+    pair_token = await get_pair_token(token_id)
 
-    # Switch to the new tab
-    driver.switch_to.window(driver.window_handles[-1])
+    axiom_url = f"https://axiom.trade/meme/{pair_token}"
+    driver.get(axiom_url)
 
-    # Navigate to the page
-    driver.get(f"https://axiom.trade/meme/{token_id}")
-    await asyncio.sleep(5)  # Wait for the page to load
+    await asyncio.sleep(10)
 
     element = driver.find_element(By.CSS_SELECTOR, ".flex.flex-1.flex-row.min-h-0.overflow-hidden.relative")
-
+    image_capture_path = "chart_screenshot.png"
     # Take a screenshot of the specific element
-    image_path = element.screenshot("chart_screenshot.png")
-
-    # Close the current tab
-    driver.close()
-
-    # Switch back to the original tab
-    driver.switch_to.window(driver.window_handles[0])
-
-    return image_path
+    return element.screenshot(image_capture_path)
 
 async def comment_twitter(i):
     # Use the first driver instance (adjust if necessary)
@@ -286,27 +308,24 @@ async def post_to_twitter(message, image_path, i):
     for _ in range(1):
         group = get_random_line(group_path)
         try:
+            pair_token = await get_pair_token(token_id)
+
+            axiom_url = f"https://axiom.trade/meme/{pair_token}"
+            driver.get(axiom_url)
+            await asyncio.sleep(20)
+
+            element = driver.find_element(By.CSS_SELECTOR, ".flex.flex-1.flex-row.min-h-0.overflow-hidden.relative")
+            image_capture_path = "chart_screenshot.png"
+            # Take a screenshot of the specific element
+            element.screenshot(image_capture_path)
+
+            # image_capture_path = snapshot_chart(driver, token_id)
+
             driver.get("https://x.com/home")
             await asyncio.sleep(10)
 
-            # This feature post in community
-            # try:
-            #     tweet_button = driver.find_element(By.CSS_SELECTOR, '[data-testid="SideNav_NewTweet_Button"]')
-            #     # print(f"find tweet_button is ok")
-            # except (StaleElementReferenceException, NoSuchElementException):
-            #     # print(f"can not find tweet_button")
-            #     continue
-            #
-            # if tweet_button:
-            #     driver.execute_script("arguments[0].click();", tweet_button)
-            #     # print(f"click tweet_button is ok")
-            #
-            # await asyncio.sleep(5)
-
             if image_path:
                 absolute_image_path = os.path.abspath(image_path)
-
-                image_capture_path = await snapshot_chart(driver, token_id)  # This will give you the correct image path
 
                 # Get the absolute paths for the image
                 absolute_image_capture = os.path.abspath(image_capture_path)
