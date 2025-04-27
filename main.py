@@ -14,7 +14,7 @@ from selenium.webdriver.common.by import By
 from telethon import TelegramClient, events
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from telethon.tl.types import MessageMediaPhoto
+from telethon.tl.types import MessageMediaPhoto, MessageMediaDocument
 import pyperclip
 from selenium.webdriver.common.keys import Keys
 import requests
@@ -41,14 +41,14 @@ client = TelegramClient("session_name", API_ID, API_HASH)
 
 
 profiles = [
-    # {
-    #     'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
-    #     'profile_id': '67c2db00cf918ba0d64151bc'  # Profile 1 ID
-    # },
-    # {
-    #     'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
-    #     'profile_id': '67c64b4dd858809e6118a287'  # Replace with your Profile 2 ID
-    # },
+    {
+        'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
+        'profile_id': '67c2db00cf918ba0d64151bc'  # Profile 1 ID
+    },
+    {
+        'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
+        'profile_id': '680c209c7ea908e8c8c8362e'  # Replace with your Profile 2 ID
+    },
     {
         'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
         'profile_id': '6807a86b8c3d736930df3bea'  # Replace with your Profile 3 ID
@@ -61,6 +61,16 @@ cookies = {
     }
 
 chrome_driver_path = f"C:/Users/Administrator/Downloads/chromedriver-win64/chromedriver.exe"
+chrome_driver_chart_path = f"C:/Users/Administrator/Downloads/chromedriver-win64-chart/chromedriver.exe"
+
+# create new driver for chart screen shot
+chrome_options_chart = Options()
+chrome_options_chart.add_argument("--start-maximized")
+
+# Set up the driver (update the path to your chromedriver)
+service_chart = Service(executable_path=chrome_driver_chart_path)
+driver_chart = webdriver.Chrome(service=service_chart, options=chrome_options_chart)
+
 
 BASE_PORT = 3500
 MAX_RETRIES = 3
@@ -113,6 +123,11 @@ for i, profile in enumerate(profiles):
         exit()
 
 ####################### ------------------- TWITTER ------------------- ###########################
+
+def get_last_line(message_text):
+    lines = message_text.split("\n")
+    profile_id = lines[-1].strip()  # Get the last line
+    return profile_id
 
 def extract_token_id(message_text):
     lines = message_text.splitlines()
@@ -297,7 +312,16 @@ async def comment_twitter(i):
         #     print("Tweet reply button not found or error updating tweet textarea.")
 
         await asyncio.sleep(5)  # Additional delay before closing the reply dialog
+def take_screen_chart(token_id):
+    chrome_options_chart = Options()
+    chrome_options_chart.add_argument("--start-maximized")
 
+    # Set up the driver (update the path to your chromedriver)
+    service_chart = Service('path/to/chromedriver')  # e.g., 'C:/WebDriver/bin/chromedriver.exe'
+    driver_chart = webdriver.Chrome(service=service_chart, options=chrome_options_chart)
+
+    # Open the target URL
+    driver_chart.get('https://axiom.trade/meme')
 async def post_to_twitter(message, image_path, i):
     # Sequential posting
     token_id = extract_token_id(message)
@@ -308,33 +332,32 @@ async def post_to_twitter(message, image_path, i):
     for _ in range(1):
         group = get_random_line(group_path)
         try:
+
             pair_token = await get_pair_token(token_id)
 
             axiom_url = f"https://axiom.trade/meme/{pair_token}"
-            driver.get(axiom_url)
-            await asyncio.sleep(20)
+            driver_chart.get(axiom_url)
+            await asyncio.sleep(10)
 
-            element = driver.find_element(By.CSS_SELECTOR, ".flex.flex-1.flex-row.min-h-0.overflow-hidden.relative")
-            image_capture_path = "chart_screenshot.png"
+            element = driver_chart.find_element(By.CSS_SELECTOR, ".flex.flex-1.flex-row.min-h-0.overflow-hidden.relative")
+            image_chart_path = "chart_screenshot.png"
             # Take a screenshot of the specific element
-            element.screenshot(image_capture_path)
-
-            # image_capture_path = snapshot_chart(driver, token_id)
+            element.screenshot(image_chart_path)
 
             driver.get("https://x.com/home")
             await asyncio.sleep(10)
 
             if image_path:
-                absolute_image_path = os.path.abspath(image_path)
+                absolute_token_image = os.path.abspath(image_path)
 
                 # Get the absolute paths for the image
-                absolute_image_capture = os.path.abspath(image_capture_path)
+                absolute_chart_image = os.path.abspath(image_chart_path)
                 # upload_image = driver.find_element(By.CSS_SELECTOR, '[data-testid="fileInput"]')
                 upload_image = WebDriverWait(driver, 10).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-testid="fileInput"]'))
                 )
 
-                upload_image.send_keys(f"{absolute_image_capture}\n{absolute_image_path}")
+                upload_image.send_keys(f"{absolute_chart_image}\n{absolute_token_image}")
 
             await asyncio.sleep(2)
 
@@ -364,18 +387,11 @@ async def post_to_twitter(message, image_path, i):
 async def handler(event):
     new_message = event.message
     new_message_text = new_message.message
-    # message_reply = event.message.reply_to_msg_id
-    # history = await client.get_messages(SOURCE_CHANNEL, limit=3)
+    random_profile_id = get_last_line(new_message_text)
 
-    # if len(history) > 1:
-        # previous_message = history[1]  # previous message is at index 1
-        # previous_message_1 = history[2]
-
-        # if "/pnl" in previous_message.text:
-            # your logic here
-            # print("Found '/pnl' in previous message.")
     try:
         image_path = None
+
         if new_message.media and isinstance(new_message.media, MessageMediaPhoto):
             image_path = await new_message.download_media()
 
@@ -387,7 +403,9 @@ async def handler(event):
                 elif new_message_text == "like":
                     await like_twitter(i)
                 else:
-                    await post_to_twitter(new_message_text, image_path, i)
+                    if random_profile_id == profile_id:
+                        new_message_text = remove_last_line(new_message_text)
+                        await post_to_twitter(new_message_text, image_path, i)
             except Exception as e:
                 print(f"Error processing profile {profile_id}: {e}")
 
