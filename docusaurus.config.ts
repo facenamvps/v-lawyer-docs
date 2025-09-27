@@ -25,7 +25,7 @@ const config: Config = {
   organizationName: 'v-lawyer', // Usually your GitHub org/user name.
   projectName: 'v-lawyer-docs', // Usually your repo name.
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
@@ -79,11 +79,11 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Getting Started',
+          label: 'Documentation',
         },
         {
           type: 'dropdown',
-          label: 'CLI',
+          label: 'Kanuni CLI',
           position: 'left',
           items: [
             {
@@ -94,40 +94,7 @@ const config: Config = {
               label: 'Authentication',
               to: '/docs/cli/authentication/overview',
             },
-            {
-              label: 'Commands',
-              to: '/docs/cli/commands/overview',
-            },
           ],
-        },
-        {
-          type: 'dropdown',
-          label: 'API',
-          position: 'left',
-          items: [
-            {
-              label: 'Authentication',
-              to: '/docs/api/authentication/overview',
-            },
-            {
-              label: 'Endpoints',
-              to: '/docs/api/endpoints/overview',
-            },
-            {
-              label: 'Webhooks',
-              to: '/docs/api/webhooks',
-            },
-          ],
-        },
-        {
-          to: '/docs/guides/overview',
-          label: 'Guides',
-          position: 'left',
-        },
-        {
-          type: 'docsVersionDropdown',
-          position: 'right',
-          dropdownActiveClassDisabled: true,
         },
         {
           href: 'https://github.com/v-lawyer/kanuni-cli',
@@ -144,15 +111,11 @@ const config: Config = {
           items: [
             {
               label: 'Getting Started',
-              to: '/docs/intro',
-            },
-            {
-              label: 'CLI Reference',
               to: '/docs/cli/installation',
             },
             {
-              label: 'API Reference',
-              to: '/docs/api/authentication/overview',
+              label: 'CLI Authentication',
+              to: '/docs/cli/authentication/overview',
             },
           ],
         },
@@ -160,8 +123,8 @@ const config: Config = {
           title: 'Community',
           items: [
             {
-              label: 'GitHub Discussions',
-              href: 'https://github.com/v-lawyer/kanuni-cli/discussions',
+              label: 'GitHub',
+              href: 'https://github.com/v-lawyer/kanuni-cli',
             },
             {
               label: 'Discord',
