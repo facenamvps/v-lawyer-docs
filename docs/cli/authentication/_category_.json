@@ -1,0 +1,10 @@
+{
+  "label": "Authentication",
+  "position": 2,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "title": "Authentication Methods",
+    "description": "Learn about OAuth Device Flow and API Key authentication for Kanuni CLI."
+  }
+}

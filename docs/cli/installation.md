@@ -18,18 +18,58 @@ The Kanuni CLI can be installed on macOS, Linux, and Windows. Choose your prefer
 
 ## Installation Methods
 
-### Option 1: Install from Binary (Recommended)
+### Option 1: Install via npm (Recommended)
 
-The fastest way to install Kanuni is to download the pre-compiled binary for your platform.
-
-#### macOS
+The easiest way to install Kanuni is through npm:
 
 ```bash
-# Download the latest release
-curl -L https://github.com/v-lawyer/kanuni-cli/releases/latest/download/kanuni-darwin-amd64 -o kanuni
+# Install globally using npm
+npm install -g @v-lawyer/kanuni
 
-# Make it executable
-chmod +x kanuni
+# Verify installation
+kanuni --version
+```
+
+This method works on macOS, Linux, and Windows with Node.js 18+ installed.
+
+### Option 2: Quick Install Script (macOS/Linux)
+
+Use our installation script for automatic platform detection and setup:
+
+```bash
+curl -fsSL https://v-lawyer.ai/kanuni/install.sh | bash
+```
+
+The script will:
+- Detect your platform automatically
+- Download the appropriate binary
+- Install it to `~/.local/bin`
+- Add to PATH if needed
+
+### Option 3: Install via Homebrew (macOS/Linux)
+
+If you have [Homebrew](https://brew.sh/) installed:
+
+```bash
+# Add the V-Lawyer tap
+brew tap v-lawyer/tap
+
+# Install Kanuni
+brew install kanuni
+
+# Verify installation
+kanuni --version
+```
+
+### Option 4: Download Binary Directly
+
+Download pre-compiled binaries from [GitHub Releases](https://github.com/v-lawyer/kanuni-cli/releases/latest).
+
+#### macOS (Intel)
+
+```bash
+# Download and extract
+curl -L https://github.com/v-lawyer/kanuni-cli/releases/latest/download/kanuni-darwin-x64.tar.gz | tar xz
 
 # Move to PATH
 sudo mv kanuni /usr/local/bin/
@@ -38,14 +78,11 @@ sudo mv kanuni /usr/local/bin/
 kanuni --version
 ```
 
-For Apple Silicon (M1/M2/M3):
+#### macOS (Apple Silicon)
 
 ```bash
-# Download the ARM64 version
-curl -L https://github.com/v-lawyer/kanuni-cli/releases/latest/download/kanuni-darwin-arm64 -o kanuni
-
-# Make it executable
-chmod +x kanuni
+# Download and extract
+curl -L https://github.com/v-lawyer/kanuni-cli/releases/latest/download/kanuni-darwin-arm64.tar.gz | tar xz
 
 # Move to PATH
 sudo mv kanuni /usr/local/bin/
@@ -57,11 +94,8 @@ kanuni --version
 #### Linux
 
 ```bash
-# Download the latest release
-curl -L https://github.com/v-lawyer/kanuni-cli/releases/latest/download/kanuni-linux-amd64 -o kanuni
-
-# Make it executable
-chmod +x kanuni
+# Download and extract
+curl -L https://github.com/v-lawyer/kanuni-cli/releases/latest/download/kanuni-linux-x64.tar.gz | tar xz
 
 # Move to PATH
 sudo mv kanuni /usr/local/bin/
@@ -72,43 +106,26 @@ kanuni --version
 
 #### Windows
 
-1. Download the latest release from [GitHub Releases](https://github.com/v-lawyer/kanuni-cli/releases/latest)
-2. Extract `kanuni.exe` from the ZIP file
-3. Add the directory containing `kanuni.exe` to your PATH environment variable
-4. Open a new Command Prompt or PowerShell and verify:
+```bash
+# Download the ZIP file
+curl -L https://github.com/v-lawyer/kanuni-cli/releases/latest/download/kanuni-windows-x64.zip -o kanuni.zip
 
-```powershell
+# Extract (or use Windows Explorer)
+unzip kanuni.zip
+
+# Add to PATH and verify
 kanuni --version
 ```
 
-### Option 2: Install via Homebrew (macOS/Linux)
+### Option 5: Docker
 
-If you have [Homebrew](https://brew.sh/) installed:
+Run Kanuni in a Docker container:
 
 ```bash
-# Add the V-Lawyer tap
-brew tap v-lawyer/kanuni
-
-# Install Kanuni
-brew install kanuni
-
-# Verify installation
-kanuni --version
+docker run --rm -it ghcr.io/v-lawyer/kanuni-cli:latest --help
 ```
 
-### Option 3: Install via Cargo (Rust)
-
-If you have [Rust](https://rustup.rs/) installed:
-
-```bash
-# Install from crates.io
-cargo install kanuni
-
-# Verify installation
-kanuni --version
-```
-
-### Option 4: Build from Source
+### Option 6: Build from Source
 
 For developers who want to build from source:
 
@@ -185,16 +202,23 @@ See the [Authentication Guide](./authentication/overview) for details.
 
 ## Updating Kanuni
 
+### Using npm
+
+```bash
+npm update -g @v-lawyer/kanuni
+```
+
 ### Using Homebrew
 
 ```bash
 brew upgrade kanuni
 ```
 
-### Using Cargo
+### Using Install Script
 
 ```bash
-cargo install kanuni --force
+# Re-run the install script - it will update to the latest version
+curl -fsSL https://v-lawyer.ai/kanuni/install.sh | bash
 ```
 
 ### Manual Update
@@ -203,16 +227,16 @@ Follow the same steps as installation, but replace the existing binary.
 
 ## Uninstallation
 
+### Using npm
+
+```bash
+npm uninstall -g @v-lawyer/kanuni
+```
+
 ### Using Homebrew
 
 ```bash
 brew uninstall kanuni
-```
-
-### Using Cargo
-
-```bash
-cargo uninstall kanuni
 ```
 
 ### Manual Uninstallation

@@ -1,0 +1,9 @@
+{
+  "label": "CLI",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "title": "Kanuni CLI",
+    "description": "Command-line interface for V-Lawyer's AI-powered legal intelligence platform."
+  }
+}
