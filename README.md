@@ -1,6 +1,6 @@
 # V-Lawyer Documentation
 
-Official documentation for V-Lawyer Platform - AI-powered legal intelligence for developers.
+Official documentation for V-Lawyer Platform - AI-powered legal intelligence for lawyers, developers, and legal professionals.
 
 ## 🚀 Deployment to Vercel
 

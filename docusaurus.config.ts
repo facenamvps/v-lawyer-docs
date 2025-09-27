@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'V-Lawyer Documentation',
-  tagline: 'AI-powered Legal Intelligence Platform for Developers',
+  tagline: 'AI-powered Legal Intelligence for Everyone',
   favicon: 'img/favicon.png',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future

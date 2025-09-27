@@ -99,7 +99,7 @@ export default function HomepageFeatures(): ReactNode {
           <div className="text--center margin-bottom--xl">
             <Heading as="h2">Why Choose V-Lawyer?</Heading>
             <p className={styles.sectionSubtitle}>
-              Professional-grade legal intelligence tools for developers and legal teams
+              Professional-grade legal intelligence tools for lawyers, developers, and legal teams
             </p>
           </div>
           <div className="row">
