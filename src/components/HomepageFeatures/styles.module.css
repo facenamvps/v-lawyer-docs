@@ -1,0 +1,140 @@
+.features {
+  padding: 4rem 0;
+  background: linear-gradient(to bottom, var(--ifm-background-color) 0%, var(--ifm-background-surface-color) 100%);
+}
+
+.additionalFeatures {
+  padding: 4rem 0;
+  background-color: var(--ifm-background-surface-color);
+}
+
+.sectionSubtitle {
+  font-size: 1.2rem;
+  color: var(--ifm-color-emphasis-600);
+  margin-bottom: 3rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.featureCard {
+  background: var(--ifm-card-background-color);
+  border-radius: 12px;
+  padding: 2rem;
+  height: 100%;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.featureCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.featureIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  background: linear-gradient(135deg, var(--ifm-color-primary) 0%, var(--ifm-color-primary-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cta {
+  padding: 5rem 0;
+  background: linear-gradient(135deg, var(--ifm-color-primary-darkest) 0%, var(--ifm-color-primary) 100%);
+  color: white;
+}
+
+.cta h2,
+.cta p {
+  color: white !important;
+}
+
+.ctaSubtitle {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.95;
+}
+
+.ctaButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ctaButtons .button {
+  font-size: 1.1rem;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.ctaButtons .button--primary {
+  background: white;
+  color: var(--ifm-color-primary-darkest);
+  border: 2px solid white;
+  font-weight: 700;
+}
+
+.ctaButtons .button--primary:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  color: var(--ifm-color-primary-darkest);
+}
+
+.ctaButtons .button--outline {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid white;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+}
+
+.ctaButtons .button--outline:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  color: white;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 996px) {
+  .features,
+  .additionalFeatures,
+  .cta {
+    padding: 3rem 1rem;
+  }
+
+  .featureCard {
+    margin-bottom: 1rem;
+  }
+
+  .ctaButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ctaButtons .button {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* Dark mode adjustments */
+[data-theme='dark'] .featureCard {
+  background: var(--ifm-background-surface-color);
+  border-color: var(--ifm-color-emphasis-300);
+}
+
+[data-theme='dark'] .featureCard:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .features {
+  background: linear-gradient(to bottom, var(--ifm-background-color) 0%, var(--ifm-background-surface-color) 100%);
+}

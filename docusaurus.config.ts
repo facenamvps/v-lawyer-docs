@@ -1,0 +1,227 @@
+import {themes as prismThemes} from 'prism-react-renderer';
+import type {Config} from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
+
+// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+
+const config: Config = {
+  title: 'V-Lawyer Documentation',
+  tagline: 'AI-powered Legal Intelligence Platform for Developers',
+  favicon: 'img/favicon.png',
+
+  // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
+  future: {
+    v4: true, // Improve compatibility with the upcoming Docusaurus v4
+  },
+
+  // Set the production url of your site here
+  url: 'https://docs.v-lawyer.ai',
+  // Set the /<baseUrl>/ pathname under which your site is served
+  // For GitHub pages deployment, it is often '/<projectName>/'
+  baseUrl: '/',
+
+  // GitHub pages deployment config.
+  // If you aren't using GitHub pages, you don't need these.
+  organizationName: 'v-lawyer', // Usually your GitHub org/user name.
+  projectName: 'v-lawyer-docs', // Usually your repo name.
+
+  onBrokenLinks: 'throw',
+  onBrokenMarkdownLinks: 'warn',
+
+  // Even if you don't use internationalization, you can use this field to set
+  // useful metadata like html lang. For example, if your site is Chinese, you
+  // may want to replace "en" with "zh-Hans".
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  presets: [
+    [
+      'classic',
+      {
+        docs: {
+          sidebarPath: './sidebars.ts',
+          // Please change this to your repo.
+          // Remove this to remove the "edit this page" links.
+          editUrl:
+            'https://github.com/v-lawyer/v-lawyer-docs/tree/main/',
+          showLastUpdateTime: true,
+          showLastUpdateAuthor: true,
+        },
+        blog: false, // Disable blog for documentation site
+        theme: {
+          customCss: './src/css/custom.css',
+        },
+      } satisfies Preset.Options,
+    ],
+  ],
+
+  themeConfig: {
+    // Replace with your project's social card
+    image: 'img/v-lawyer-social-card.jpg',
+    colorMode: {
+      defaultMode: 'dark',
+      disableSwitch: false,
+      respectPrefersColorScheme: true,
+    },
+    navbar: {
+      title: 'V-Lawyer',
+      logo: {
+        alt: 'V-Lawyer Logo',
+        src: 'img/logo.png',
+        srcDark: 'img/logo-dark.png',
+        width: 32,
+        height: 32,
+      },
+      items: [
+        {
+          type: 'docSidebar',
+          sidebarId: 'tutorialSidebar',
+          position: 'left',
+          label: 'Getting Started',
+        },
+        {
+          type: 'dropdown',
+          label: 'CLI',
+          position: 'left',
+          items: [
+            {
+              label: 'Installation',
+              to: '/docs/cli/installation',
+            },
+            {
+              label: 'Authentication',
+              to: '/docs/cli/authentication/overview',
+            },
+            {
+              label: 'Commands',
+              to: '/docs/cli/commands/overview',
+            },
+          ],
+        },
+        {
+          type: 'dropdown',
+          label: 'API',
+          position: 'left',
+          items: [
+            {
+              label: 'Authentication',
+              to: '/docs/api/authentication/overview',
+            },
+            {
+              label: 'Endpoints',
+              to: '/docs/api/endpoints/overview',
+            },
+            {
+              label: 'Webhooks',
+              to: '/docs/api/webhooks',
+            },
+          ],
+        },
+        {
+          to: '/docs/guides/overview',
+          label: 'Guides',
+          position: 'left',
+        },
+        {
+          type: 'docsVersionDropdown',
+          position: 'right',
+          dropdownActiveClassDisabled: true,
+        },
+        {
+          href: 'https://github.com/v-lawyer/kanuni-cli',
+          label: 'GitHub',
+          position: 'right',
+        },
+      ],
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Documentation',
+          items: [
+            {
+              label: 'Getting Started',
+              to: '/docs/intro',
+            },
+            {
+              label: 'CLI Reference',
+              to: '/docs/cli/installation',
+            },
+            {
+              label: 'API Reference',
+              to: '/docs/api/authentication/overview',
+            },
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {
+              label: 'GitHub Discussions',
+              href: 'https://github.com/v-lawyer/kanuni-cli/discussions',
+            },
+            {
+              label: 'Discord',
+              href: 'https://discord.gg/v-lawyer',
+            },
+            {
+              label: 'Twitter/X',
+              href: 'https://x.com/vlawyer_ai',
+            },
+          ],
+        },
+        {
+          title: 'Resources',
+          items: [
+            {
+              label: 'V-Lawyer Platform',
+              href: 'https://v-lawyer.ai',
+            },
+            {
+              label: 'API Status',
+              href: 'https://status.v-lawyer.ai',
+            },
+            {
+              label: 'Changelog',
+              href: 'https://github.com/v-lawyer/kanuni-cli/releases',
+            },
+          ],
+        },
+        {
+          title: 'Legal',
+          items: [
+            {
+              label: 'Privacy Policy',
+              href: 'https://v-lawyer.ai/privacy',
+            },
+            {
+              label: 'Terms of Service',
+              href: 'https://v-lawyer.ai/terms',
+            },
+            {
+              label: 'MIT License',
+              href: 'https://github.com/v-lawyer/kanuni-cli/blob/main/LICENSE',
+            },
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} V-Lawyer, Inc. Built with Docusaurus.`,
+    },
+    prism: {
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
+      additionalLanguages: ['bash', 'rust', 'toml', 'json'],
+    },
+    // Algolia search configuration (to be added later)
+    // algolia: {
+    //   appId: 'YOUR_APP_ID',
+    //   apiKey: 'YOUR_API_KEY',
+    //   indexName: 'v-lawyer',
+    // },
+  } satisfies Preset.ThemeConfig,
+};
+
+export default config;
