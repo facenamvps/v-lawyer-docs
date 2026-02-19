@@ -47,11 +47,11 @@ profiles = [
     },
     {
         'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
-        'profile_id': '680c209c7ea908e8c8c8362e'  # Replace with your Profile 2 ID
+        'profile_id': '68161df91435710135d75ff9'  # Replace with your Profile 2 ID
     },
     {
         'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2JmMjUxYWViYTc5YzlhYTNhZjMzOTEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2JmMjgwNjIxZGRiZjM3OGNjNDVjMmMifQ.ZB7qnD0J5e7TW_WEJflotqTx_CRwwccAImS36JHDLEs',
-        'profile_id': '6807a86b8c3d736930df3bea'  # Replace with your Profile 3 ID
+        'profile_id': '6819b216385b45dde088860f'  # Replace with your Profile 3 ID
     }
 ]
 
@@ -177,13 +177,14 @@ def remove_unsupported_characters(text):
     return ''.join(c for c in unicodedata.normalize('NFKD', text) if ord(c) <= 0xFFFF)
 
 
-async def like_twitter(i):
+async def like_twitter(message, token_id, i):
     # Use the first driver instance (adjust if necessary)
     driver = drivers[i]
     driver.execute_script("window.focus();")
+    driver.get(f"https://x.com/search?q={token_id}&src=typed_query&f=live")
+    await asyncio.sleep(10)
+
     for _ in range(2):
-        driver.get("https://x.com/home")
-        await asyncio.sleep(10)
 
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         await asyncio.sleep(5)
@@ -322,9 +323,8 @@ def take_screen_chart(token_id):
 
     # Open the target URL
     driver_chart.get('https://axiom.trade/meme')
-async def post_to_twitter(message, image_path, i):
+async def post_to_twitter(message, token_id, image_path, i):
     # Sequential posting
-    token_id = extract_token_id(message)
     driver = drivers[i]
     driver.execute_script("window.focus();")
     profile_id = profiles[i]['profile_id']
@@ -332,12 +332,18 @@ async def post_to_twitter(message, image_path, i):
     for _ in range(1):
         group = get_random_line(group_path)
         try:
-
             pair_token = await get_pair_token(token_id)
 
             axiom_url = f"https://axiom.trade/meme/{pair_token}"
             driver_chart.get(axiom_url)
             await asyncio.sleep(10)
+
+            driver_chart.execute_script("""
+                    const modal = document.querySelector('div.fixed.inset-0');
+                    if (modal) {
+                        modal.remove();
+                    }
+                """)
 
             element = driver_chart.find_element(By.CSS_SELECTOR, ".flex.flex-1.flex-row.min-h-0.overflow-hidden.relative")
             image_chart_path = "chart_screenshot.png"
@@ -358,6 +364,7 @@ async def post_to_twitter(message, image_path, i):
                 )
 
                 upload_image.send_keys(f"{absolute_chart_image}\n{absolute_token_image}")
+                # upload_image.send_keys(f"{absolute_token_image}")
 
             await asyncio.sleep(2)
 
@@ -399,13 +406,16 @@ async def handler(event):
             try:
 
                 if new_message_text == "comment":
-                    await comment_twitter(i)
+                    await comment_twitter(None, i)
                 elif new_message_text == "like":
                     await like_twitter(i)
                 else:
                     if random_profile_id == profile_id:
                         new_message_text = remove_last_line(new_message_text)
-                        await post_to_twitter(new_message_text, image_path, i)
+                        token_id = get_last_line(new_message_text)
+                        new_message_text = remove_last_line(new_message_text)
+                        await post_to_twitter(new_message_text,token_id , image_path, i)
+                        await like_twitter(new_message_text, token_id, i)
             except Exception as e:
                 print(f"Error processing profile {profile_id}: {e}")
 
